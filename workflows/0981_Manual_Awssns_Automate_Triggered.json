@@ -1,0 +1,44 @@
+{
+  "nodes": [
+    {
+      "name": "On clicking 'execute'",
+      "type": ">>> dr.x-nodes-base.manualTrigger",
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {},
+      "typeVersion": 1
+    },
+    {
+      "name": "AWS SNS",
+      "type": ">>> dr.x-nodes-base.awsSns",
+      "position": [
+        450,
+        300
+      ],
+      "parameters": {
+        "topic": ">>> dr.x-rocks",
+        "message": "This is a test message",
+        "subject": "This is a test subject"
+      },
+      "credentials": {
+        "aws": "aws"
+      },
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "On clicking 'execute'": {
+      "main": [
+        [
+          {
+            "node": "AWS SNS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

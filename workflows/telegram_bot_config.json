@@ -1,0 +1,47 @@
+{
+  "telegram_bot": {
+    "name": "drxaibor_bot",
+    "username": "@drxaibor_bot",
+    "token": "7824479182:AAGtUvv8ZnB18HwxHZxpaY7cd9YIGRc8ig4",
+    "webhook_url": "https://your-n8n-instance.com/webhook/telegram-webhook",
+    "allowed_users": [
+      {
+        "id": 7327535994,
+        "username": "wolfaiOM",
+        "first_name": "Wolf",
+        "language": "ar"
+      }
+    ],
+    "features": {
+      "text_processing": true,
+      "voice_transcription": true,
+      "image_analysis": true,
+      "payments": true
+    },
+    "payments_info": {
+      "documentation": "https://core.telegram.org/bots/payments",
+      "supported": true
+    }
+  },
+  "deepseek_api": {
+    "api_key": "sk-94af74f2b4fe4e98a8b1ec389dc6ec4b",
+    "base_url": "https://api.deepseek.com/v1",
+    "models": {
+      "chat": "deepseek-chat",
+      "vision": "deepseek-vl-chat",
+      "transcription": "whisper-1"
+    },
+    "default_settings": {
+      "max_tokens": 1000,
+      "temperature": 0.7,
+      "system_message": "أنت مساعد ذكي يتحدث العربية. اسمك Wolf AI. أجب بطريقة مفيدة ومهذبة وتفاعلية."
+    }
+  },
+  "n8n_settings": {
+    "webhook_path": "telegram-webhook",
+    "execution_mode": "webhook",
+    "error_handling": true,
+    "logging": true
+  }
+}
+
