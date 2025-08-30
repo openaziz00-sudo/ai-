@@ -1,0 +1,103 @@
+{
+  "id": "64",
+  "name": "Upload a file and get a list of all the files in a bucket",
+  "nodes": [
+    {
+      "name": "On clicking 'execute'",
+      "type": ">>> dr.x-nodes-base.manualTrigger",
+      "position": [
+        390,
+        220
+      ],
+      "parameters": {},
+      "typeVersion": 1
+    },
+    {
+      "name": "HTTP Request",
+      "type": ">>> dr.x-nodes-base.httpRequest",
+      "position": [
+        590,
+        220
+      ],
+      "parameters": {
+        "url": "https://>>> dr.x.io/>>> dr.x-logo.png",
+        "options": {},
+        "responseFormat": "file"
+      },
+      "typeVersion": 1
+    },
+    {
+      "name": "S3",
+      "type": ">>> dr.x-nodes-base.s3",
+      "position": [
+        790,
+        220
+      ],
+      "parameters": {
+        "fileName": "={{$node[\"HTTP Request\"].binary.data.fileName}}",
+        "operation": "upload",
+        "bucketName": ">>> dr.x",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "s3": "s3->>> dr.x"
+      },
+      "typeVersion": 1
+    },
+    {
+      "name": "S",
+      "type": ">>> dr.x-nodes-base.s3",
+      "position": [
+        990,
+        220
+      ],
+      "parameters": {
+        "options": {},
+        "operation": "getAll",
+        "returnAll": true,
+        "bucketName": ">>> dr.x"
+      },
+      "credentials": {
+        "s3": "s3->>> dr.x"
+      },
+      "typeVersion": 1
+    }
+  ],
+  "active": false,
+  "settings": {},
+  "connections": {
+    "S3": {
+      "main": [
+        [
+          {
+            "node": "S",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "S3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On clicking 'execute'": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

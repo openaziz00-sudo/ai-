@@ -1,0 +1,15 @@
+{
+  "timestamp": "20250830_073337",
+  "backup_type": "full",
+  "components": {
+    "database": "backups/workflows_db_20250830_073329.db.gz",
+    "workflows": "backups/workflows_files_20250830_073329.tar.gz",
+    "config": "backups/config_20250830_073337.json"
+  },
+  "stats": {
+    "total_workflows": 2056,
+    "active_workflows": 215,
+    "workflow_files": 2056,
+    "total_size_mb": 29.51
+  }
+}

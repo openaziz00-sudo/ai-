@@ -4,7 +4,7 @@ FastAPI Server for dr.x Workflow Documentation
 High-performance API with sub-100ms response times.
 """
 
-from fastapi import FastAPI, HTTPException, Query, BackgroundTasks, Request
+from fastapi import FastAPI, HTTPException, Query, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,24 +19,12 @@ import uvicorn
 
 from workflow_db import WorkflowDatabase
 
-# Rate limiting
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-
-# Initialize rate limiter
-limiter = Limiter(key_func=get_remote_address)
-
 # Initialize FastAPI app
 app = FastAPI(
     title="dr.x Workflow Documentation API",
     description="Fast API for browsing and searching workflow documentation",
     version="2.0.0"
 )
-
-# Add rate limiting
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Add middleware for performance
 app.add_middleware(GZipMiddleware, minimum_size=1000)
@@ -51,27 +39,19 @@ app.add_middleware(
 # Initialize database
 db = WorkflowDatabase()
 
-# Startup function to verify database and initialize cache
+# Startup function to verify database
 @app.on_event("startup")
 async def startup_event():
-    """Verify database connectivity and initialize cache on startup."""
+    """Verify database connectivity on startup."""
     try:
         stats = db.get_stats()
-        if stats["total"] == 0:
+        if stats['total'] == 0:
             print("⚠️  Warning: No workflows found in database. Run indexing first.")
         else:
-            print(f"✅ Database connected: {stats["total"]} workflows indexed")
+            print(f"✅ Database connected: {stats['total']} workflows indexed")
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
         raise
-
-    # Initialize Redis cache
-    redis_host = os.getenv("REDIS_HOST", "localhost")
-    redis_port = int(os.getenv("REDIS_PORT", 6379))
-    redis = aioredis.from_url(f"redis://{redis_host}:{redis_port}")
-    FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
-    print(f"✅ Redis cache initialized at redis://{redis_host}:{redis_port}")
-
 
 # Response models
 class WorkflowSummary(BaseModel):
@@ -84,9 +64,7 @@ class WorkflowSummary(BaseModel):
     complexity: str = "low"
     node_count: int = 0
     integrations: List[str] = []
-    integration_count: int = 0
     tags: List[str] = []
-    tag_count: int = 0
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
     
@@ -142,8 +120,7 @@ async def health_check():
     return {"status": "healthy", "message": "dr.x Workflow API is running"}
 
 @app.get("/api/stats", response_model=StatsResponse)
-@limiter.limit("30/minute")
-async def get_stats(request: Request):
+async def get_stats():
     """Get workflow database statistics."""
     try:
         stats = db.get_stats()
@@ -152,19 +129,11 @@ async def get_stats(request: Request):
         raise HTTPException(status_code=500, detail=f"Error fetching stats: {str(e)}")
 
 @app.get("/api/workflows", response_model=SearchResponse)
-@limiter.limit("60/minute")
 async def search_workflows(
-    request: Request,
     q: str = Query("", description="Search query"),
     trigger: str = Query("all", description="Filter by trigger type"),
     complexity: str = Query("all", description="Filter by complexity"),
     active_only: bool = Query(False, description="Show only active workflows"),
-    min_nodes: Optional[int] = Query(None, ge=0, description="Minimum number of nodes"),
-    max_nodes: Optional[int] = Query(None, ge=0, description="Maximum number of nodes"),
-    min_integrations: Optional[int] = Query(None, ge=0, description="Minimum number of integrations"),
-    max_integrations: Optional[int] = Query(None, ge=0, description="Maximum number of integrations"),
-    sort_by: str = Query("name", description="Sort by field (name, created_at, node_count, integration_count)"),
-    sort_order: str = Query("asc", description="Sort order (asc or desc)"),
     page: int = Query(1, ge=1, description="Page number"),
     per_page: int = Query(20, ge=1, le=100, description="Items per page")
 ):
@@ -177,12 +146,6 @@ async def search_workflows(
             trigger_filter=trigger,
             complexity_filter=complexity,
             active_only=active_only,
-            min_nodes=min_nodes,
-            max_nodes=max_nodes,
-            min_integrations=min_integrations,
-            max_integrations=max_integrations,
-            sort_by=sort_by,
-            sort_order=sort_order,
             limit=per_page,
             offset=offset
         )
@@ -202,9 +165,7 @@ async def search_workflows(
                     'complexity': workflow.get('complexity', 'low'),
                     'node_count': workflow.get('node_count', 0),
                     'integrations': workflow.get('integrations', []),
-                    'integration_count': workflow.get('integration_count', 0),
                     'tags': workflow.get('tags', []),
-                    'tag_count': workflow.get('tag_count', 0),
                     'created_at': workflow.get('created_at'),
                     'updated_at': workflow.get('updated_at')
                 }
@@ -226,19 +187,14 @@ async def search_workflows(
             filters={
                 "trigger": trigger,
                 "complexity": complexity,
-                "active_only": active_only,
-                "min_nodes": min_nodes,
-                "max_nodes": max_nodes,
-                "min_integrations": min_integrations,
-                "max_integrations": max_integrations
+                "active_only": active_only
             }
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error searching workflows: {str(e)}")
 
 @app.get("/api/workflows/{filename}")
-@limiter.limit("100/minute")
-async def get_workflow_detail(request: Request, filename: str):
+async def get_workflow_detail(filename: str):
     """Get detailed workflow information including raw JSON."""
     try:
         # Get workflow metadata from database

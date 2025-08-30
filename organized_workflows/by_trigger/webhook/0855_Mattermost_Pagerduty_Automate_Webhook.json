@@ -1,0 +1,81 @@
+{
+  "nodes": [
+    {
+      "name": "Webhook",
+      "type": ">>> dr.x-nodes-base.webhook",
+      "position": [
+        450,
+        300
+      ],
+      "webhookId": "213324b6-b84d-42f9-af3b-42804cc71cd1",
+      "parameters": {
+        "path": "213324b6-b84d-42f9-af3b-42804cc71cd1",
+        "options": {},
+        "httpMethod": "POST"
+      },
+      "typeVersion": 1
+    },
+    {
+      "name": "PagerDuty",
+      "type": ">>> dr.x-nodes-base.pagerDuty",
+      "position": [
+        650,
+        300
+      ],
+      "parameters": {
+        "email": ">>> dr.x@gmail.com",
+        "operation": "update",
+        "incidentId": "={{$json[\"body\"][\"context\"][\"pagerduty_incident\"]}}",
+        "updateFields": {
+          "status": "acknowledged"
+        }
+      },
+      "credentials": {
+        "pagerDutyApi": "PagerDuty Credentials"
+      },
+      "typeVersion": 1
+    },
+    {
+      "name": "Mattermost",
+      "type": ">>> dr.x-nodes-base.mattermost",
+      "position": [
+        850,
+        300
+      ],
+      "parameters": {
+        "message": "💪🏼 Incident status has been changed to Acknowledged on PagerDuty.",
+        "channelId": "={{$node[\"Webhook\"].json[\"body\"][\"channel_id\"]}}",
+        "attachments": [],
+        "otherOptions": {}
+      },
+      "credentials": {
+        "mattermostApi": "Mattermost Credentials"
+      },
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "PagerDuty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PagerDuty": {
+      "main": [
+        [
+          {
+            "node": "Mattermost",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

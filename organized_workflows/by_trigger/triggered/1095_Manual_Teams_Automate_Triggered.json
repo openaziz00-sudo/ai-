@@ -1,0 +1,105 @@
+{
+  "nodes": [
+    {
+      "name": "On clicking 'execute'",
+      "type": ">>> dr.x-nodes-base.manualTrigger",
+      "position": [
+        540,
+        360
+      ],
+      "parameters": {},
+      "typeVersion": 1
+    },
+    {
+      "name": "Microsoft Teams",
+      "type": ">>> dr.x-nodes-base.microsoftTeams",
+      "position": [
+        740,
+        360
+      ],
+      "parameters": {
+        "name": ">>> dr.x-docs-demo",
+        "teamId": "d6b83b00-085d-472c-a6d9-8c2c32c1424e",
+        "options": {}
+      },
+      "credentials": {
+        "microsoftTeamsOAuth2Api": "teams_n8n"
+      },
+      "typeVersion": 1
+    },
+    {
+      "name": "Microsoft Teams1",
+      "type": ">>> dr.x-nodes-base.microsoftTeams",
+      "position": [
+        940,
+        360
+      ],
+      "parameters": {
+        "teamId": "={{$node[\"Microsoft Teams\"].parameter[\"teamId\"]}}",
+        "channelId": "={{$node[\"Microsoft Teams\"].json[\"id\"]}}",
+        "operation": "update",
+        "updateFields": {
+          "name": ">>> dr.x-documentation-demo"
+        }
+      },
+      "credentials": {
+        "microsoftTeamsOAuth2Api": "teams_n8n"
+      },
+      "typeVersion": 1
+    },
+    {
+      "name": "Microsoft Teams2",
+      "type": ">>> dr.x-nodes-base.microsoftTeams",
+      "position": [
+        1140,
+        360
+      ],
+      "parameters": {
+        "teamId": "={{$node[\"Microsoft Teams\"].parameter[\"teamId\"]}}",
+        "message": ">>> dr.x rocks!",
+        "resource": "channelMessage",
+        "channelId": "={{$node[\"Microsoft Teams\"].json[\"id\"]}}",
+        "messageType": "text"
+      },
+      "credentials": {
+        "microsoftTeamsOAuth2Api": "teams_n8n"
+      },
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "Microsoft Teams": {
+      "main": [
+        [
+          {
+            "node": "Microsoft Teams1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft Teams1": {
+      "main": [
+        [
+          {
+            "node": "Microsoft Teams2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On clicking 'execute'": {
+      "main": [
+        [
+          {
+            "node": "Microsoft Teams",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

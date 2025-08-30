@@ -1,0 +1,48 @@
+{
+  "id": "15",
+  "name": "Bubble Data Access",
+  "nodes": [
+    {
+      "name": "On clicking 'execute'",
+      "type": ">>> dr.x-nodes-base.manualTrigger",
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {},
+      "typeVersion": 1
+    },
+    {
+      "name": "HTTP Request",
+      "type": ">>> dr.x-nodes-base.httpRequest",
+      "position": [
+        450,
+        300
+      ],
+      "parameters": {
+        "url": "https://>>> dr.x-lessons.bubbleapps.io/version-test/api/1.1/obj/user",
+        "options": {},
+        "authentication": "headerAuth"
+      },
+      "credentials": {
+        "httpHeaderAuth": "Bubble >>> dr.x Lessons Token"
+      },
+      "typeVersion": 1
+    }
+  ],
+  "active": false,
+  "settings": {},
+  "connections": {
+    "On clicking 'execute'": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

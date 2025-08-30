@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>drxai - Workflow Documentation</title>
+    <title>⚡ dr.x Workflow Documentation</title>
     <style>
         /* Modern CSS Reset and Base */
         * {
@@ -13,16 +13,13 @@
         }
 
         :root {
-            /* drxai Brand Colors */
-            --primary: #00C4CC;
-            --primary-dark: #00A0A8;
-            --secondary: #8A2BE2;
-            --accent: #39FF14;
-            --success: #28A745;
-            --warning: #FFC107;
-            --error: #DC3545;
-            --bg: #F5F5F5;
-            --bg-secondary: #FFFFFF;
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --bg: #ffffff;
+            --bg-secondary: #f8fafc;
             --bg-tertiary: #f1f5f9;
             --text: #1e293b;
             --text-secondary: #64748b;
@@ -33,8 +30,8 @@
         }
 
         [data-theme="dark"] {
-            --bg: #0E0F12;
-            --bg-secondary: #1A1B1E;
+            --bg: #0f172a;
+            --bg-secondary: #1e293b;
             --bg-tertiary: #334155;
             --text: #f8fafc;
             --text-secondary: #cbd5e1;
@@ -541,8 +538,8 @@
         <!-- Header -->
         <header class="header">
             <div class="container">
-                <h1 class="title">drxai</h1>
-                <p class="subtitle">AI-Powered Workflow Documentation & Search Engine</p>
+                <h1 class="title">⚡ dr.x Workflow Documentation</h1>
+                <p class="subtitle">Lightning-fast workflow browser with instant search</p>
                 <div class="stats">
                     <div class="stat">
                         <span class="stat-number" id="totalCount">0</span>
@@ -576,46 +573,34 @@
                     >
                 </div>
                 
-                <div class="search-controls">
-            <input type="text" id="search-input" placeholder="Search workflows by name, description, or integration...">
-            <button id="advanced-search-btn">Advanced</button>
-        </div>
-        <div id="advanced-search-panel" class="hidden">
-            <div class="filter-group">
-  div>
-            <div class="filter-group">
-                <label for="min-nodes">Min Nodes:</label>
-                <input type="number" id="min-nodes" min="0">
-            </div>
-            <div class="filter-group">
-                <label for="max-nodes">Max Nodes:</label>
-                <input type="number" id="max-nodes" min="0">
-            </div>
-            <div class="filter-group">
-                <label for="min-integrations">Min Integrations:</label>
-                <input type="number" id="min-integrations" min="0">
-            </div>
-            <div class="filter-group">
-                <label for="max-integrations">Max Integrations:</label>
-                <input type="number" id="max-integrations" min="0">
-            </div>
-            <div class="filter-group">
-                <label for="sort-by">Sort by:</label>
-                <select id="sort-by">
-                    <option value="name">Name</option>
-                    <option value="created_at">Created Date</option>
-                    <option value="node_count">Node Count</option>
-                    <option value="integration_count">Integration Count</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="sort-order">Sort order:</label>
-                <select id="sort-order">
-                    <option value="asc">Ascending</option>
-                    <option value="desc">Descending</option>
-                </select>
-            </div>
-        </div>                    </div>
+                <div class="filter-section">
+                    <div class="filter-group">
+                        <label for="triggerFilter">Trigger:</label>
+                        <select id="triggerFilter">
+                            <option value="all">All Types</option>
+                            <option value="Webhook">Webhook</option>
+                            <option value="Scheduled">Scheduled</option>
+                            <option value="Manual">Manual</option>
+                            <option value="Complex">Complex</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="complexityFilter">Complexity:</label>
+                        <select id="complexityFilter">
+                            <option value="all">All Levels</option>
+                            <option value="low">Low (≤5 nodes)</option>
+                            <option value="medium">Medium (6-15 nodes)</option>
+                            <option value="high">High (16+ nodes)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>
+                            <input type="checkbox" id="activeOnly">
+                            Active only
+                        </label>
+                    </div>
                     
                     <button id="themeToggle" class="theme-toggle">🌙</button>
                 </div>

@@ -1,0 +1,123 @@
+{
+  "nodes": [
+    {
+      "name": "On clicking 'execute'",
+      "type": ">>> dr.x-nodes-base.manualTrigger",
+      "position": [
+        50,
+        200
+      ],
+      "parameters": {},
+      "typeVersion": 1
+    },
+    {
+      "name": "Dropbox",
+      "type": ">>> dr.x-nodes-base.dropbox",
+      "position": [
+        250,
+        200
+      ],
+      "parameters": {
+        "path": "/>>> dr.x",
+        "resource": "folder"
+      },
+      "credentials": {
+        "dropboxApi": "dropbox_accesstoken"
+      },
+      "typeVersion": 1
+    },
+    {
+      "name": "Dropbox1",
+      "type": ">>> dr.x-nodes-base.dropbox",
+      "position": [
+        650,
+        200
+      ],
+      "parameters": {
+        "path": "/>>> dr.x/file.png",
+        "binaryData": true
+      },
+      "credentials": {
+        "dropboxApi": "dropbox_accesstoken"
+      },
+      "typeVersion": 1
+    },
+    {
+      "name": "HTTP Request",
+      "type": ">>> dr.x-nodes-base.httpRequest",
+      "position": [
+        450,
+        200
+      ],
+      "parameters": {
+        "url": "https://>>> dr.x.io/>>> dr.x-logo.png",
+        "options": {},
+        "responseFormat": "file"
+      },
+      "typeVersion": 1
+    },
+    {
+      "name": "Dropbox2",
+      "type": ">>> dr.x-nodes-base.dropbox",
+      "position": [
+        850,
+        200
+      ],
+      "parameters": {
+        "path": "/>>> dr.x",
+        "resource": "folder",
+        "operation": "list"
+      },
+      "credentials": {
+        "dropboxApi": "dropbox_accesstoken"
+      },
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "Dropbox": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dropbox1": {
+      "main": [
+        [
+          {
+            "node": "Dropbox2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Dropbox1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On clicking 'execute'": {
+      "main": [
+        [
+          {
+            "node": "Dropbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

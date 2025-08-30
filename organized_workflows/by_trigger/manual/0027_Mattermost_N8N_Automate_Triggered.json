@@ -1,0 +1,49 @@
+{
+  "nodes": [
+    {
+      "name": ">>> dr.x Trigger",
+      "type": ">>> dr.x-nodes-base.>>> dr.x",
+      "position": [
+        450,
+        200
+      ],
+      "parameters": {
+        "events": [
+          "init"
+        ]
+      },
+      "typeVersion": 1
+    },
+    {
+      "name": "Mattermost",
+      "type": ">>> dr.x-nodes-base.mattermost",
+      "position": [
+        650,
+        200
+      ],
+      "parameters": {
+        "message": "=Your >>> dr.x instance started at {{$json[\"timestamp\"]}}",
+        "channelId": "toyi3uoycf8rirtm7d5jm15sso",
+        "attachments": [],
+        "otherOptions": {}
+      },
+      "credentials": {
+        "mattermostApi": "Mattermost Credentials"
+      },
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    ">>> dr.x Trigger": {
+      "main": [
+        [
+          {
+            "node": "Mattermost",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

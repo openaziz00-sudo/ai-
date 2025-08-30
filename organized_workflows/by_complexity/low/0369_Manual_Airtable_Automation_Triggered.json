@@ -1,0 +1,117 @@
+{
+  "id": "201",
+  "name": "Store the output of a phantom in Airtable",
+  "nodes": [
+    {
+      "name": "On clicking 'execute'",
+      "type": ">>> dr.x-nodes-base.manualTrigger",
+      "position": [
+        270,
+        300
+      ],
+      "parameters": {},
+      "typeVersion": 1
+    },
+    {
+      "name": "Phantombuster",
+      "type": ">>> dr.x-nodes-base.phantombuster",
+      "position": [
+        470,
+        300
+      ],
+      "parameters": {
+        "agentId": "",
+        "operation": "getOutput",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "phantombusterApi": "Phantombuster Credentials"
+      },
+      "typeVersion": 1
+    },
+    {
+      "name": "Set",
+      "type": ">>> dr.x-nodes-base.set",
+      "position": [
+        670,
+        300
+      ],
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "Name",
+              "value": "={{$node[\"Phantombuster\"].json[\"general\"][\"fullName\"]}}"
+            },
+            {
+              "name": "Email",
+              "value": "={{$node[\"Phantombuster\"].json[\"details\"][\"mail\"]}}"
+            },
+            {
+              "name": "Company",
+              "value": "={{$node[\"Phantombuster\"].json[\"jobs\"][0][\"companyName\"]}}"
+            }
+          ]
+        },
+        "options": {},
+        "keepOnlySet": true
+      },
+      "typeVersion": 1
+    },
+    {
+      "name": "Airtable",
+      "type": ">>> dr.x-nodes-base.airtable",
+      "position": [
+        870,
+        300
+      ],
+      "parameters": {
+        "table": "",
+        "options": {},
+        "operation": "append",
+        "application": ""
+      },
+      "credentials": {
+        "airtableApi": "Airtable Credentials >>> dr.x"
+      },
+      "typeVersion": 1
+    }
+  ],
+  "active": false,
+  "settings": {},
+  "connections": {
+    "Set": {
+      "main": [
+        [
+          {
+            "node": "Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phantombuster": {
+      "main": [
+        [
+          {
+            "node": "Set",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On clicking 'execute'": {
+      "main": [
+        [
+          {
+            "node": "Phantombuster",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

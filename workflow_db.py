@@ -46,8 +46,6 @@ class WorkflowDatabase:
                 node_count INTEGER DEFAULT 0,
                 integrations TEXT,  -- JSON array
                 tags TEXT,         -- JSON array
-                integration_count INTEGER DEFAULT 0,
-                tag_count INTEGER DEFAULT 0,
                 created_at TEXT,
                 updated_at TEXT,
                 file_hash TEXT,
@@ -64,11 +62,10 @@ class WorkflowDatabase:
                 description,
                 integrations,
                 tags,
-                integration_count,
-                tag_count,
                 content=workflows,
                 content_rowid=id
-            )        """)
+            )
+        """)
         
         # Create indexes for fast filtering
         conn.execute("CREATE INDEX IF NOT EXISTS idx_trigger_type ON workflows(trigger_type)")
@@ -79,24 +76,25 @@ class WorkflowDatabase:
         
         # Create triggers to keep FTS table in sync
         conn.execute("""
-            CREATE TRIGGER IF NOT EXISTS workflows_ai AFTER INSER                INSERT INTO workflows_fts(rowid, filename, name, description, integrations, tags, integration_count, tag_count)
-                VALUES (new.id, new.filename, new.name, new.description, new.integrations, new.tags, new.integration_count, new.tag_count);
+            CREATE TRIGGER IF NOT EXISTS workflows_ai AFTER INSERT ON workflows BEGIN
+                INSERT INTO workflows_fts(rowid, filename, name, description, integrations, tags)
+                VALUES (new.id, new.filename, new.name, new.description, new.integrations, new.tags);
             END
         """)
         
         conn.execute("""
             CREATE TRIGGER IF NOT EXISTS workflows_ad AFTER DELETE ON workflows BEGIN
-                INSERT INTO workflows_fts(workflows_fts, rowid, filename, name, description, integrations, tags, integration_count, tag_count)
-                VALUES (\'delete\', old.id, old.filename, old.name, old.description, old.integrations, old.tags, old.integration_count, old.tag_count);
+                INSERT INTO workflows_fts(workflows_fts, rowid, filename, name, description, integrations, tags)
+                VALUES ('delete', old.id, old.filename, old.name, old.description, old.integrations, old.tags);
             END
         """)
         
         conn.execute("""
             CREATE TRIGGER IF NOT EXISTS workflows_au AFTER UPDATE ON workflows BEGIN
-                INSERT INTO workflows_fts(workflows_fts, rowid, filename, name, description, integrations, tags, integration_count, tag_count)
-                VALUES (\'delete\', old.id, old.filename, old.name, old.description, old.integrations, old.tags, old.integration_count, old.tag_count);
-                INSERT INTO workflows_fts(rowid, filename, name, description, integrations, tags, integration_count, tag_count)
-                VALUES (new.id, new.filename, new.name, new.description, new.integrations, new.tags, new.integration_count, new.tag_count);
+                INSERT INTO workflows_fts(workflows_fts, rowid, filename, name, description, integrations, tags)
+                VALUES ('delete', old.id, old.filename, old.name, old.description, old.integrations, old.tags);
+                INSERT INTO workflows_fts(rowid, filename, name, description, integrations, tags)
+                VALUES (new.id, new.filename, new.name, new.description, new.integrations, new.tags);
             END
         """)
         
@@ -197,11 +195,9 @@ class WorkflowDatabase:
         workflow['complexity'] = complexity
         
         # Find trigger type and integrations
-        trigger_type, integrations = self.analyze_nodes(workflow["nodes"])
-        workflow["trigger_type"] = trigger_type
-        workflow["integrations"] = list(integrations)
-        workflow["integration_count"] = len(integrations)
-        workflow["tag_count"] = len(workflow["tags"])
+        trigger_type, integrations = self.analyze_nodes(workflow['nodes'])
+        workflow['trigger_type'] = trigger_type
+        workflow['integrations'] = list(integrations)
         
         # Generate description
         workflow['description'] = self.generate_description(workflow, trigger_type, integrations)
@@ -511,109 +507,86 @@ class WorkflowDatabase:
         print(f"✅ Indexing complete: {stats['processed']} processed, {stats['skipped']} skipped, {stats['errors']} errors")
         return stats
     
-    def search_workflows(
-        self,
-        query: str = "",
-        trigger_filter: str = "all",
-        complexity_filter: str = "all",
-        active_only: bool = False,
-        min_nodes: Optional[int] = None,
-        max_nodes: Optional[int] = None,
-        min_integrations: Optional[int] = None,
-        max_integrations: Optional[int] = None,
-        sort_by: str = "name",
-        sort_order: str = "asc",
-        limit: int = 20,
-        offset: int = 0
-    ) -> Tuple[List[Dict], int]:
-        """Search and filter workflows with full-text search and pagination."""
+    def search_workflows(self, query: str = "", trigger_filter: str = "all", 
+                        complexity_filter: str = "all", active_only: bool = False,
+                        limit: int = 50, offset: int = 0) -> Tuple[List[Dict], int]:
+        """Fast search with filters and pagination."""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-
-        # Base query for FTS5
-        fts_query = []
-        if query:
-            fts_query.append(f"workflows_fts MATCH '{query}'")
-
-        # Build WHERE clause for filtering
-        where_clauses = []
-        params = {}
-
-        if trigger_filter != "all":
-            where_clauses.append("trigger_type = :trigger_filter")
-            params["trigger_filter"] = trigger_filter
-
-        if complexity_filter != "all":
-            where_clauses.append("complexity = :complexity_filter")
-            params["complexity_filter"] = complexity_filter
-
+        
+        # Build WHERE clause
+        where_conditions = []
+        params = []
+        
         if active_only:
-            where_clauses.append("active = 1")
-
-        if min_nodes is not None:
-            where_clauses.append("node_count >= :min_nodes")
-            params["min_nodes"] = min_nodes
-
-        if max_nodes is not None:
-            where_clauses.append("node_count <= :max_nodes")
-            params["max_nodes"] = max_nodes
-
-        if min_integrations is not None:
-            where_clauses.append("integration_count >= :min_integrations")
-            params["min_integrations"] = min_integrations
-
-        if max_integrations is not None:
-            where_clauses.append("integration_count <= :max_integrations")
-            params["max_integrations"] = max_integrations
-
-        # Combine FTS and WHERE clauses
-        full_where_clause = ""
-        if fts_query:
-            full_where_clause += fts_query[0]
-            if where_clauses:
-                full_where_clause += " AND " + " AND ".join(where_clauses)
-        elif where_clauses:
-            full_where_clause += " AND ".join(where_clauses)
-
-        # Total count query
-        count_sql = "SELECT COUNT(*) FROM workflows"
-        if full_where_clause:
-            count_sql += f" WHERE {full_where_clause}"
-        total_count = cursor.execute(count_sql, params).fetchone()[0]
-
-        # Main search query
-        sql = "SELECT * FROM workflows"
-        if full_where_clause:
-            sql += f" WHERE {full_where_clause}"
-
-        # Add sorting
-        valid_sort_fields = ["name", "created_at", "node_count", "integration_count"]
-        if sort_by in valid_sort_fields:
-            sql += f" ORDER BY {sort_by}"
-            if sort_order.lower() == "desc":
-                sql += " DESC"
-            else:
-                sql += " ASC"
+            where_conditions.append("w.active = 1")
+        
+        if trigger_filter != "all":
+            where_conditions.append("w.trigger_type = ?")
+            params.append(trigger_filter)
+        
+        if complexity_filter != "all":
+            where_conditions.append("w.complexity = ?")
+            params.append(complexity_filter)
+        
+        # Use FTS search if query provided
+        if query.strip():
+            # FTS search with ranking
+            base_query = """
+                SELECT w.*, rank
+                FROM workflows_fts fts
+                JOIN workflows w ON w.id = fts.rowid
+                WHERE workflows_fts MATCH ?
+            """
+            params.insert(0, query)
         else:
-            sql += " ORDER BY name ASC" # Default sort
-
-        sql += " LIMIT :limit OFFSET :offset"
-        params["limit"] = limit
-        params["offset"] = offset
-
-        cursor.execute(sql, params)
-        workflows = [dict(row) for row in cursor.fetchall()]
+            # Regular query without FTS
+            base_query = """
+                SELECT w.*, 0 as rank
+                FROM workflows w
+                WHERE 1=1
+            """
+        
+        if where_conditions:
+            base_query += " AND " + " AND ".join(where_conditions)
+        
+        # Count total results
+        count_query = f"SELECT COUNT(*) as total FROM ({base_query}) t"
+        cursor = conn.execute(count_query, params)
+        total = cursor.fetchone()['total']
+        
+        # Get paginated results
+        if query.strip():
+            base_query += " ORDER BY rank"
+        else:
+            base_query += " ORDER BY w.analyzed_at DESC"
+        
+        base_query += f" LIMIT {limit} OFFSET {offset}"
+        
+        cursor = conn.execute(base_query, params)
+        rows = cursor.fetchall()
+        
+        # Convert to dictionaries and parse JSON fields
+        results = []
+        for row in rows:
+            workflow = dict(row)
+            workflow['integrations'] = json.loads(workflow['integrations'] or '[]')
+            
+            # Parse tags and convert dict tags to strings
+            raw_tags = json.loads(workflow['tags'] or '[]')
+            clean_tags = []
+            for tag in raw_tags:
+                if isinstance(tag, dict):
+                    # Extract name from tag dict if available
+                    clean_tags.append(tag.get('name', str(tag.get('id', 'tag'))))
+                else:
+                    clean_tags.append(str(tag))
+            workflow['tags'] = clean_tags
+            
+            results.append(workflow)
+        
         conn.close()
-
-        # Deserialize JSON fields
-        for workflow in workflows:
-            if workflow.get("integrations"):
-                workflow["integrations"] = json.loads(workflow["integrations"])
-            if workflow.get("tags"):
-                workflow["tags"] = json.loads(workflow["tags"])
-
-        return workflows, total_count
+        return results, total
     
     def get_stats(self) -> Dict[str, Any]:
         """Get database statistics."""

@@ -1,0 +1,684 @@
+{
+  "id": "EnhancedDeepSeekTelegramBot",
+  "meta": {
+    "instanceId": "enhanced-deepseek-telegram-integration"
+  },
+  "name": "🚀 Wolf AI - Telegram Bot المتقدم مع DeepSeek",
+  "tags": ["telegram", "deepseek", "ai", "automation", "wolf-ai"],
+  "nodes": [
+    {
+      "id": "webhook-listener",
+      "name": "🎯 استقبال رسائل تيليجرام",
+      "type": "n8n-nodes-base.webhook",
+      "position": [100, 300],
+      "webhookId": "wolf-ai-telegram-webhook",
+      "parameters": {
+        "path": "wolf-ai-telegram",
+        "options": {
+          "binaryPropertyName": "data"
+        },
+        "httpMethod": "POST"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "log-incoming-message",
+      "name": "📝 تسجيل الرسالة الواردة",
+      "type": "n8n-nodes-base.set",
+      "position": [300, 300],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "timestamp",
+              "name": "timestamp",
+              "type": "string",
+              "value": "={{ new Date().toISOString() }}"
+            },
+            {
+              "id": "message-type",
+              "name": "message_type",
+              "type": "string",
+              "value": "={{ $json.body.message.text ? 'text' : $json.body.message.voice ? 'voice' : $json.body.message.photo ? 'photo' : 'unknown' }}"
+            },
+            {
+              "id": "user-info",
+              "name": "user_info",
+              "type": "object",
+              "value": "={{ { id: $json.body.message.from.id, username: $json.body.message.from.username, first_name: $json.body.message.from.first_name, language_code: $json.body.message.from.language_code } }}"
+            },
+            {
+              "id": "chat-info",
+              "name": "chat_info",
+              "type": "object",
+              "value": "={{ { id: $json.body.message.chat.id, type: $json.body.message.chat.type } }}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 3.4
+    },
+    {
+      "id": "advanced-user-validation",
+      "name": "🔐 التحقق المتقدم من المستخدم",
+      "type": "n8n-nodes-base.if",
+      "position": [500, 300],
+      "parameters": {
+        "options": {},
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "or",
+          "conditions": [
+            {
+              "id": "user-id-check",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.user_info.id }}",
+              "rightValue": "7327535994"
+            },
+            {
+              "id": "username-check",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.user_info.username }}",
+              "rightValue": "wolfaiOM"
+            }
+          ]
+        }
+      },
+      "typeVersion": 2.2
+    },
+    {
+      "id": "welcome-new-user",
+      "name": "👋 ترحيب بالمستخدمين الجدد",
+      "type": "n8n-nodes-base.telegram",
+      "position": [700, 100],
+      "parameters": {
+        "text": "مرحباً {{ $('تسجيل الرسالة الواردة').item.json.user_info.first_name }}! 🤖\n\nأنا Wolf AI، مساعدك الذكي المتقدم.\n\n🔥 **قدراتي الخارقة:**\n⚡ معالجة النصوص بذكاء فائق\n🎤 تحويل الصوت إلى نص\n🖼️ تحليل الصور والمحتوى البصري\n🧠 ذاكرة محادثة متقدمة\n🌟 ردود تفاعلية ومخصصة\n\n**جرب أن ترسل لي:**\n• نص للمحادثة\n• رسالة صوتية\n• صورة للتحليل\n\nدعنا نبدأ رحلة الذكاء الاصطناعي! 🚀",
+        "chatId": "={{ $json.chat_info.id }}",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "wolf-ai-telegram-credentials",
+          "name": "Wolf AI Telegram Bot"
+        }
+      },
+      "typeVersion": 1.2
+    },
+    {
+      "id": "intelligent-message-router",
+      "name": "🧠 موجه الرسائل الذكي",
+      "type": "n8n-nodes-base.switch",
+      "position": [700, 300],
+      "parameters": {
+        "options": {},
+        "rules": {
+          "rules": [
+            {
+              "id": "text-message",
+              "operation": "exists",
+              "value1": "={{ $('🎯 استقبال رسائل تيليجرام').item.json.body.message.text }}"
+            },
+            {
+              "id": "voice-message",
+              "operation": "exists",
+              "value1": "={{ $('🎯 استقبال رسائل تيليجرام').item.json.body.message.voice }}"
+            },
+            {
+              "id": "photo-message",
+              "operation": "exists",
+              "value1": "={{ $('🎯 استقبال رسائل تيليجرام').item.json.body.message.photo }}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 3
+    },
+    {
+      "id": "process-text-message",
+      "name": "📝 معالجة الرسائل النصية",
+      "type": "n8n-nodes-base.set",
+      "position": [900, 200],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "user-message",
+              "name": "user_message",
+              "type": "string",
+              "value": "={{ $('🎯 استقبال رسائل تيليجرام').item.json.body.message.text }}"
+            },
+            {
+              "id": "message-context",
+              "name": "context",
+              "type": "object",
+              "value": "={{ { user_name: $('تسجيل الرسالة الواردة').item.json.user_info.first_name, chat_id: $('تسجيل الرسالة الواردة').item.json.chat_info.id, timestamp: $('تسجيل الرسالة الواردة').item.json.timestamp, message_type: 'text' } }}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 3.4
+    },
+    {
+      "id": "enhanced-deepseek-chat",
+      "name": "🤖 DeepSeek AI المحسن",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1100, 200],
+      "parameters": {
+        "url": "https://api.deepseek.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "httpMethod": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer sk-94af74f2b4fe4e98a8b1ec389dc6ec4b"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"model\": \"deepseek-chat\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"أنت Wolf AI، مساعد ذكي متقدم يتحدث العربية بطلاقة. شخصيتك قوية وواثقة ومتفاعلة. تتميز بـ:\\n\\n🔥 **هويتك الفريدة:**\\n- اسمك Wolf AI وأنت فخور بهذا الاسم\\n- تجمع بين القوة والذكاء والتفاعل الإيجابي\\n- تستخدم الرموز التعبيرية بذكاء لتعزيز التواصل\\n- تقدم إجابات عملية ومفيدة ومبتكرة\\n\\n⚡ **أسلوب تفاعلك:**\\n- كن واثقاً ومتحمساً في ردودك\\n- استخدم أمثلة عملية وحلول إبداعية\\n- اجعل المحادثة تفاعلية وممتعة\\n- قدم قيمة حقيقية في كل رد\\n\\n🎯 **مهمتك:**\\nمساعدة المستخدم {{ $json.context.user_name }} بأفضل طريقة ممكنة، مع الحفاظ على شخصيتك القوية والمتميزة.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.user_message }}\"\n    }\n  ],\n  \"max_tokens\": 1500,\n  \"temperature\": 0.8,\n  \"top_p\": 0.9,\n  \"frequency_penalty\": 0.1,\n  \"presence_penalty\": 0.1\n}",
+        "options": {}
+      },
+      "typeVersion": 4.2
+    },
+    {
+      "id": "process-voice-message",
+      "name": "🎤 معالجة الرسائل الصوتية",
+      "type": "n8n-nodes-base.telegram",
+      "position": [900, 300],
+      "parameters": {
+        "fileId": "={{ $('🎯 استقبال رسائل تيليجرام').item.json.body.message.voice.file_id }}",
+        "resource": "file"
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "wolf-ai-telegram-credentials",
+          "name": "Wolf AI Telegram Bot"
+        }
+      },
+      "typeVersion": 1.2
+    },
+    {
+      "id": "advanced-voice-transcription",
+      "name": "🔊 تحويل صوتي متقدم",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1100, 300],
+      "parameters": {
+        "url": "https://api.deepseek.com/v1/audio/transcriptions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "httpMethod": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer sk-94af74f2b4fe4e98a8b1ec389dc6ec4b"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "file",
+              "value": "={{ $binary.data }}"
+            },
+            {
+              "name": "model",
+              "value": "whisper-1"
+            },
+            {
+              "name": "language",
+              "value": "ar"
+            },
+            {
+              "name": "response_format",
+              "value": "json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "typeVersion": 4.2
+    },
+    {
+      "id": "process-transcribed-text",
+      "name": "📋 معالجة النص المحول",
+      "type": "n8n-nodes-base.set",
+      "position": [1300, 300],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "transcribed-message",
+              "name": "user_message",
+              "type": "string",
+              "value": "🎤 **رسالة صوتية محولة:**\\n{{ $json.text }}"
+            },
+            {
+              "id": "voice-context",
+              "name": "context",
+              "type": "object",
+              "value": "={{ { user_name: $('تسجيل الرسالة الواردة').item.json.user_info.first_name, chat_id: $('تسجيل الرسالة الواردة').item.json.chat_info.id, timestamp: $('تسجيل الرسالة الواردة').item.json.timestamp, message_type: 'voice', original_duration: $('🎤 معالجة الرسائل الصوتية').item.json.body.message.voice.duration } }}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 3.4
+    },
+    {
+      "id": "process-image-message",
+      "name": "🖼️ معالجة الصور",
+      "type": "n8n-nodes-base.telegram",
+      "position": [900, 400],
+      "parameters": {
+        "fileId": "={{ $('🎯 استقبال رسائل تيليجرام').item.json.body.message.photo.last().file_id }}",
+        "resource": "file"
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "wolf-ai-telegram-credentials",
+          "name": "Wolf AI Telegram Bot"
+        }
+      },
+      "typeVersion": 1.2
+    },
+    {
+      "id": "advanced-image-analysis",
+      "name": "👁️ تحليل بصري متقدم",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1100, 400],
+      "parameters": {
+        "url": "https://api.deepseek.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "httpMethod": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer sk-94af74f2b4fe4e98a8b1ec389dc6ec4b"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"model\": \"deepseek-vl-chat\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"🔍 **تحليل بصري متقدم من Wolf AI:**\\n\\nقم بتحليل هذه الصورة بتفصيل شامل باللغة العربية. اذكر:\\n\\n📋 **المحتوى الأساسي:** ما تراه في الصورة\\n🎨 **التفاصيل البصرية:** الألوان، التكوين، الإضاءة\\n🧠 **التفسير الذكي:** المعنى أو الغرض من الصورة\\n💡 **ملاحظات إضافية:** أي تفاصيل مثيرة للاهتمام\\n\\n{{ $('🎯 استقبال رسائل تيليجرام').item.json.body.message.caption ? 'تعليق المستخدم: ' + $('🎯 استقبال رسائل تيليجرام').item.json.body.message.caption : '' }}\"\n        },\n        {\n          \"type\": \"image_url\",\n          \"image_url\": {\n            \"url\": \"data:image/jpeg;base64,{{ $binary.data.toString('base64') }}\",\n            \"detail\": \"high\"\n          }\n        }\n      ]\n    }\n  ],\n  \"max_tokens\": 1500,\n  \"temperature\": 0.7\n}",
+        "options": {}
+      },
+      "typeVersion": 4.2
+    },
+    {
+      "id": "format-ai-response",
+      "name": "✨ تنسيق الرد الذكي",
+      "type": "n8n-nodes-base.set",
+      "position": [1300, 200],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "formatted-response",
+              "name": "ai_response",
+              "type": "string",
+              "value": "={{ $json.choices[0].message.content }}"
+            },
+            {
+              "id": "response-metadata",
+              "name": "metadata",
+              "type": "object",
+              "value": "={{ { model: $json.model, usage: $json.usage, response_time: new Date().toISOString() } }}"
+            },
+            {
+              "id": "chat-id-response",
+              "name": "chat_id",
+              "type": "string",
+              "value": "={{ $('معالجة الرسائل النصية').item.json.context.chat_id || $('معالجة النص المحول').item.json.context.chat_id }}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 3.4
+    },
+    {
+      "id": "format-image-response",
+      "name": "🎨 تنسيق رد الصورة",
+      "type": "n8n-nodes-base.set",
+      "position": [1300, 400],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "image-analysis-response",
+              "name": "ai_response",
+              "type": "string",
+              "value": "={{ $json.choices[0].message.content }}"
+            },
+            {
+              "id": "image-metadata",
+              "name": "metadata",
+              "type": "object",
+              "value": "={{ { model: $json.model, usage: $json.usage, response_time: new Date().toISOString(), image_processed: true } }}"
+            },
+            {
+              "id": "image-chat-id",
+              "name": "chat_id",
+              "type": "string",
+              "value": "={{ $('تسجيل الرسالة الواردة').item.json.chat_info.id }}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 3.4
+    },
+    {
+      "id": "smart-telegram-response",
+      "name": "🚀 إرسال الرد الذكي",
+      "type": "n8n-nodes-base.telegram",
+      "position": [1500, 300],
+      "parameters": {
+        "text": "={{ $json.ai_response }}",
+        "chatId": "={{ $json.chat_id }}",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false,
+          "disable_web_page_preview": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "wolf-ai-telegram-credentials",
+          "name": "Wolf AI Telegram Bot"
+        }
+      },
+      "typeVersion": 1.2
+    },
+    {
+      "id": "unauthorized-user-handler",
+      "name": "🚫 معالج المستخدمين غير المخولين",
+      "type": "n8n-nodes-base.telegram",
+      "position": [700, 500],
+      "parameters": {
+        "text": "🔒 **وصول مقيد**\\n\\nعذراً، هذا البوت مخصص للمستخدمين المخولين فقط.\\n\\nإذا كنت تعتقد أن هذا خطأ، يرجى التواصل مع المطور.\\n\\n🤖 Wolf AI",
+        "chatId": "={{ $('تسجيل الرسالة الواردة').item.json.chat_info.id }}",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "wolf-ai-telegram-credentials",
+          "name": "Wolf AI Telegram Bot"
+        }
+      },
+      "typeVersion": 1.2
+    },
+    {
+      "id": "error-recovery-handler",
+      "name": "🛠️ معالج الأخطاء المتقدم",
+      "type": "n8n-nodes-base.telegram",
+      "position": [1500, 500],
+      "parameters": {
+        "text": "⚠️ **حدث خطأ تقني**\\n\\nعذراً {{ $('تسجيل الرسالة الواردة').item.json.user_info.first_name }}، واجهت مشكلة تقنية مؤقتة.\\n\\n🔧 **ما يمكنك فعله:**\\n• جرب إرسال الرسالة مرة أخرى\\n• تأكد من أن الرسالة واضحة ومفهومة\\n• إذا استمرت المشكلة، أبلغ المطور\\n\\n🤖 Wolf AI - سأعود أقوى!",
+        "chatId": "={{ $('تسجيل الرسالة الواردة').item.json.chat_info.id }}",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "wolf-ai-telegram-credentials",
+          "name": "Wolf AI Telegram Bot"
+        }
+      },
+      "typeVersion": 1.2
+    },
+    {
+      "id": "usage-analytics",
+      "name": "📊 تحليلات الاستخدام",
+      "type": "n8n-nodes-base.set",
+      "position": [1700, 300],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "usage-log",
+              "name": "usage_log",
+              "type": "object",
+              "value": "={{ { timestamp: new Date().toISOString(), user_id: $('تسجيل الرسالة الواردة').item.json.user_info.id, message_type: $('تسجيل الرسالة الواردة').item.json.message_type, tokens_used: $json.metadata.usage?.total_tokens || 0, success: true } }}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 3.4
+    }
+  ],
+  "connections": {
+    "🎯 استقبال رسائل تيليجرام": {
+      "main": [
+        [
+          {
+            "node": "📝 تسجيل الرسالة الواردة",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📝 تسجيل الرسالة الواردة": {
+      "main": [
+        [
+          {
+            "node": "🔐 التحقق المتقدم من المستخدم",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔐 التحقق المتقدم من المستخدم": {
+      "main": [
+        [
+          {
+            "node": "👋 ترحيب بالمستخدمين الجدد",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "🧠 موجه الرسائل الذكي",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🚫 معالج المستخدمين غير المخولين",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧠 موجه الرسائل الذكي": {
+      "main": [
+        [
+          {
+            "node": "📝 معالجة الرسائل النصية",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🎤 معالجة الرسائل الصوتية",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🖼️ معالجة الصور",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📝 معالجة الرسائل النصية": {
+      "main": [
+        [
+          {
+            "node": "🤖 DeepSeek AI المحسن",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 DeepSeek AI المحسن": {
+      "main": [
+        [
+          {
+            "node": "✨ تنسيق الرد الذكي",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🎤 معالجة الرسائل الصوتية": {
+      "main": [
+        [
+          {
+            "node": "🔊 تحويل صوتي متقدم",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔊 تحويل صوتي متقدم": {
+      "main": [
+        [
+          {
+            "node": "📋 معالجة النص المحول",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📋 معالجة النص المحول": {
+      "main": [
+        [
+          {
+            "node": "🤖 DeepSeek AI المحسن",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🖼️ معالجة الصور": {
+      "main": [
+        [
+          {
+            "node": "👁️ تحليل بصري متقدم",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "👁️ تحليل بصري متقدم": {
+      "main": [
+        [
+          {
+            "node": "🎨 تنسيق رد الصورة",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✨ تنسيق الرد الذكي": {
+      "main": [
+        [
+          {
+            "node": "🚀 إرسال الرد الذكي",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🎨 تنسيق رد الصورة": {
+      "main": [
+        [
+          {
+            "node": "🚀 إرسال الرد الذكي",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🚀 إرسال الرد الذكي": {
+      "main": [
+        [
+          {
+            "node": "📊 تحليلات الاستخدام",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "🛠️ معالج الأخطاء المتقدم"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "2.0.0"
+}
+

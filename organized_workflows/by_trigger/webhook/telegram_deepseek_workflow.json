@@ -1,0 +1,538 @@
+{
+  "id": "DeepSeekTelegramBot",
+  "meta": {
+    "instanceId": "deepseek-telegram-integration"
+  },
+  "name": "🤖 Telegram Bot مع DeepSeek AI",
+  "tags": ["telegram", "deepseek", "ai", "automation"],
+  "nodes": [
+    {
+      "id": "webhook-listener",
+      "name": "استقبال رسائل تيليجرام",
+      "type": "n8n-nodes-base.webhook",
+      "position": [100, 200],
+      "webhookId": "telegram-webhook-deepseek",
+      "parameters": {
+        "path": "telegram-webhook",
+        "options": {
+          "binaryPropertyName": "data"
+        },
+        "httpMethod": "POST"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "user-validation",
+      "name": "التحقق من المستخدم",
+      "type": "n8n-nodes-base.if",
+      "position": [300, 200],
+      "parameters": {
+        "options": {},
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "or",
+          "conditions": [
+            {
+              "id": "user-id-check",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $('استقبال رسائل تيليجرام').item.json.body.message.from.id }}",
+              "rightValue": "7327535994"
+            },
+            {
+              "id": "username-check",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $('استقبال رسائل تيليجرام').item.json.body.message.from.username }}",
+              "rightValue": "wolfaiOM"
+            }
+          ]
+        }
+      },
+      "typeVersion": 2.2
+    },
+    {
+      "id": "message-type-router",
+      "name": "توجيه نوع الرسالة",
+      "type": "n8n-nodes-base.switch",
+      "position": [500, 200],
+      "parameters": {
+        "options": {},
+        "rules": {
+          "rules": [
+            {
+              "id": "text-message",
+              "operation": "exists",
+              "value1": "={{ $json.body.message.text }}"
+            },
+            {
+              "id": "voice-message", 
+              "operation": "exists",
+              "value1": "={{ $json.body.message.voice }}"
+            },
+            {
+              "id": "photo-message",
+              "operation": "exists", 
+              "value1": "={{ $json.body.message.photo }}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 3
+    },
+    {
+      "id": "extract-text",
+      "name": "استخراج النص",
+      "type": "n8n-nodes-base.set",
+      "position": [700, 100],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "message-text",
+              "name": "user_message",
+              "type": "string",
+              "value": "={{ $json.body.message.text }}"
+            },
+            {
+              "id": "chat-id",
+              "name": "chat_id",
+              "type": "string",
+              "value": "={{ $json.body.message.chat.id }}"
+            },
+            {
+              "id": "user-name",
+              "name": "user_name",
+              "type": "string",
+              "value": "={{ $json.body.message.from.first_name }}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 3.4
+    },
+    {
+      "id": "deepseek-api-call",
+      "name": "استدعاء DeepSeek API",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [900, 100],
+      "parameters": {
+        "url": "https://api.deepseek.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "httpMethod": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer sk-94af74f2b4fe4e98a8b1ec389dc6ec4b"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"model\": \"deepseek-chat\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"أنت مساعد ذكي يتحدث العربية. اسمك Wolf AI. أجب بطريقة مفيدة ومهذبة.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.user_message }}\"\n    }\n  ],\n  \"max_tokens\": 1000,\n  \"temperature\": 0.7\n}",
+        "options": {}
+      },
+      "typeVersion": 4.2
+    },
+    {
+      "id": "extract-ai-response",
+      "name": "استخراج رد الذكاء الاصطناعي",
+      "type": "n8n-nodes-base.set",
+      "position": [1100, 100],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ai-response",
+              "name": "ai_response",
+              "type": "string",
+              "value": "={{ $json.choices[0].message.content }}"
+            },
+            {
+              "id": "chat-id-pass",
+              "name": "chat_id",
+              "type": "string",
+              "value": "={{ $('استخراج النص').item.json.chat_id }}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 3.4
+    },
+    {
+      "id": "send-telegram-response",
+      "name": "إرسال الرد عبر تيليجرام",
+      "type": "n8n-nodes-base.telegram",
+      "position": [1300, 100],
+      "parameters": {
+        "text": "={{ $json.ai_response }}",
+        "chatId": "={{ $json.chat_id }}",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot-credentials",
+          "name": "Telegram Bot Token"
+        }
+      },
+      "typeVersion": 1.2
+    },
+    {
+      "id": "get-voice-file",
+      "name": "الحصول على ملف الصوت",
+      "type": "n8n-nodes-base.telegram",
+      "position": [700, 200],
+      "parameters": {
+        "fileId": "={{ $json.body.message.voice.file_id }}",
+        "resource": "file"
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot-credentials",
+          "name": "Telegram Bot Token"
+        }
+      },
+      "typeVersion": 1.2
+    },
+    {
+      "id": "transcribe-voice",
+      "name": "تحويل الصوت إلى نص",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [900, 200],
+      "parameters": {
+        "url": "https://api.deepseek.com/v1/audio/transcriptions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "httpMethod": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer sk-94af74f2b4fe4e98a8b1ec389dc6ec4b"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "file",
+              "value": "={{ $binary.data }}"
+            },
+            {
+              "name": "model",
+              "value": "whisper-1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "typeVersion": 4.2
+    },
+    {
+      "id": "process-transcription",
+      "name": "معالجة النص المحول",
+      "type": "n8n-nodes-base.set",
+      "position": [1100, 200],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "transcribed-text",
+              "name": "user_message",
+              "type": "string",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "id": "chat-id-voice",
+              "name": "chat_id",
+              "type": "string",
+              "value": "={{ $('الحصول على ملف الصوت').item.json.body.message.chat.id }}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 3.4
+    },
+    {
+      "id": "get-photo-file",
+      "name": "الحصول على ملف الصورة",
+      "type": "n8n-nodes-base.telegram",
+      "position": [700, 300],
+      "parameters": {
+        "fileId": "={{ $json.body.message.photo.last().file_id }}",
+        "resource": "file"
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot-credentials",
+          "name": "Telegram Bot Token"
+        }
+      },
+      "typeVersion": 1.2
+    },
+    {
+      "id": "analyze-image",
+      "name": "تحليل الصورة",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [900, 300],
+      "parameters": {
+        "url": "https://api.deepseek.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "httpMethod": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer sk-94af74f2b4fe4e98a8b1ec389dc6ec4b"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"model\": \"deepseek-vl-chat\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"صف هذه الصورة بالتفصيل باللغة العربية. {{ $json.body.message.caption || '' }}\"\n        },\n        {\n          \"type\": \"image_url\",\n          \"image_url\": {\n            \"url\": \"data:image/jpeg;base64,{{ $binary.data.toString('base64') }}\"\n          }\n        }\n      ]\n    }\n  ],\n  \"max_tokens\": 1000\n}",
+        "options": {}
+      },
+      "typeVersion": 4.2
+    },
+    {
+      "id": "process-image-response",
+      "name": "معالجة رد تحليل الصورة",
+      "type": "n8n-nodes-base.set",
+      "position": [1100, 300],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "image-analysis",
+              "name": "ai_response",
+              "type": "string",
+              "value": "={{ $json.choices[0].message.content }}"
+            },
+            {
+              "id": "chat-id-image",
+              "name": "chat_id",
+              "type": "string",
+              "value": "={{ $('الحصول على ملف الصورة').item.json.body.message.chat.id }}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 3.4
+    },
+    {
+      "id": "error-handler",
+      "name": "معالج الأخطاء",
+      "type": "n8n-nodes-base.telegram",
+      "position": [500, 400],
+      "parameters": {
+        "text": "عذراً، لا يمكنني معالجة رسالتك في الوقت الحالي. تأكد من أنك مخول لاستخدام هذا البوت.",
+        "chatId": "={{ $json.body.message.chat.id }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot-credentials",
+          "name": "Telegram Bot Token"
+        }
+      },
+      "typeVersion": 1.2
+    }
+  ],
+  "connections": {
+    "استقبال رسائل تيليجرام": {
+      "main": [
+        [
+          {
+            "node": "التحقق من المستخدم",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "التحقق من المستخدم": {
+      "main": [
+        [
+          {
+            "node": "توجيه نوع الرسالة",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "معالج الأخطاء",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "توجيه نوع الرسالة": {
+      "main": [
+        [
+          {
+            "node": "استخراج النص",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "الحصول على ملف الصوت",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "الحصول على ملف الصورة",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "استخراج النص": {
+      "main": [
+        [
+          {
+            "node": "استدعاء DeepSeek API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "استدعاء DeepSeek API": {
+      "main": [
+        [
+          {
+            "node": "استخراج رد الذكاء الاصطناعي",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "استخراج رد الذكاء الاصطناعي": {
+      "main": [
+        [
+          {
+            "node": "إرسال الرد عبر تيليجرام",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "الحصول على ملف الصوت": {
+      "main": [
+        [
+          {
+            "node": "تحويل الصوت إلى نص",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تحويل الصوت إلى نص": {
+      "main": [
+        [
+          {
+            "node": "معالجة النص المحول",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "معالجة النص المحول": {
+      "main": [
+        [
+          {
+            "node": "استدعاء DeepSeek API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "الحصول على ملف الصورة": {
+      "main": [
+        [
+          {
+            "node": "تحليل الصورة",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تحليل الصورة": {
+      "main": [
+        [
+          {
+            "node": "معالجة رد تحليل الصورة",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "معالجة رد تحليل الصورة": {
+      "main": [
+        [
+          {
+            "node": "إرسال الرد عبر تيليجرام",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "1.0.0"
+}
+

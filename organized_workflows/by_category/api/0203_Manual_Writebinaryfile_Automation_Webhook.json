@@ -1,0 +1,68 @@
+{
+  "id": "160",
+  "name": "Write a file to the host machine",
+  "nodes": [
+    {
+      "name": "On clicking 'execute'",
+      "type": ">>> dr.x-nodes-base.manualTrigger",
+      "position": [
+        260,
+        300
+      ],
+      "parameters": {},
+      "typeVersion": 1
+    },
+    {
+      "name": "HTTP Request",
+      "type": ">>> dr.x-nodes-base.httpRequest",
+      "position": [
+        460,
+        300
+      ],
+      "parameters": {
+        "url": "https://docs.>>> dr.x.io/assets/img/>>> dr.x-logo.png",
+        "options": {},
+        "responseFormat": "file"
+      },
+      "typeVersion": 1
+    },
+    {
+      "name": "Write Binary File",
+      "type": ">>> dr.x-nodes-base.writeBinaryFile",
+      "position": [
+        660,
+        300
+      ],
+      "parameters": {
+        "fileName": "/Users/tanay/Desktop/>>> dr.x-logo.png"
+      },
+      "typeVersion": 1
+    }
+  ],
+  "active": false,
+  "settings": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Write Binary File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On clicking 'execute'": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

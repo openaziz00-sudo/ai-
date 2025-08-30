@@ -1,0 +1,86 @@
+{
+  "id": "14",
+  "name": "Add a subscriber to a list and create and send a campaign",
+  "nodes": [
+    {
+      "name": "On clicking 'execute'",
+      "type": ">>> dr.x-nodes-base.manualTrigger",
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {},
+      "typeVersion": 1
+    },
+    {
+      "name": "Sendy",
+      "type": ">>> dr.x-nodes-base.sendy",
+      "position": [
+        450,
+        300
+      ],
+      "parameters": {
+        "email": "harshil@>>> dr.x.io",
+        "listId": "2",
+        "additionalFields": {
+          "name": "Harshil"
+        }
+      },
+      "credentials": {
+        "sendyApi": "sendy"
+      },
+      "typeVersion": 1
+    },
+    {
+      "name": "Sendy1",
+      "type": ">>> dr.x-nodes-base.sendy",
+      "position": [
+        650,
+        300
+      ],
+      "parameters": {
+        "title": "Welcome to >>> dr.x",
+        "replyTo": "docs@>>> dr.x.io",
+        "subject": "Welcome to >>> dr.x",
+        "fromName": ">>> dr.x",
+        "htmlText": "<body>\n  <p>Hey!</p>\n  <p>Welcome to >>> dr.x!</p>\n</body>",
+        "resource": "campaign",
+        "fromEmail": "docs@>>> dr.x.io",
+        "sendCampaign": true,
+        "additionalFields": {
+          "listIds": "2"
+        }
+      },
+      "credentials": {
+        "sendyApi": "sendy"
+      },
+      "typeVersion": 1
+    }
+  ],
+  "active": false,
+  "settings": {},
+  "connections": {
+    "Sendy": {
+      "main": [
+        [
+          {
+            "node": "Sendy1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On clicking 'execute'": {
+      "main": [
+        [
+          {
+            "node": "Sendy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

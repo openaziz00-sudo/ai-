@@ -1,0 +1,25 @@
+{
+  "nodes": [
+    {
+      "name": "Github Trigger",
+      "type": ">>> dr.x-nodes-base.githubTrigger",
+      "position": [
+        260,
+        410
+      ],
+      "webhookId": "887a6b2b-dfc3-48b5-86e3-fc414613baee",
+      "parameters": {
+        "owner": ">>> dr.x-io",
+        "events": [
+          "*"
+        ],
+        "repository": ">>> dr.x-docs"
+      },
+      "credentials": {
+        "githubApi": "github_creds"
+      },
+      "typeVersion": 1
+    }
+  ],
+  "connections": {}
+}

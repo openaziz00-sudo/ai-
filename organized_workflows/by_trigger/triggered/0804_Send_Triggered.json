@@ -1,0 +1,146 @@
+{
+  "meta": {
+    "instanceId": "02e782574ebb30fbddb2c3fd832c946466d718819d25f6fe4b920124ff3fc2c1",
+    "templateCredsSetupCompleted": true
+  },
+  "nodes": [
+    {
+      "id": "bc58bd73-921a-445c-a905-6f1bbbc0e9c3",
+      "name": "When chat message received",
+      "type": "@>>> dr.x/>>> dr.x-nodes-langchain.chatTrigger",
+      "position": [
+        1160,
+        420
+      ],
+      "webhookId": "cf762550-98e7-42f0-a0f3-cd9594331c00",
+      "parameters": {
+        "options": {}
+      },
+      "typeVersion": 1.1
+    },
+    {
+      "id": "308aea70-2831-4abd-90f6-d4cbf3901be4",
+      "name": ">>> dr.x Research AI Agent",
+      "type": "@>>> dr.x/>>> dr.x-nodes-langchain.agent",
+      "position": [
+        1440,
+        420
+      ],
+      "parameters": {
+        "options": {
+          "systemMessage": "You are an assistant integrated with the >>> dr.x Multi-Channel Platform (MCP). Your primary role is to interact with the MCP to retrieve available tools and content based on user queries about >>> dr.x. When a user asks for information or assistance regarding >>> dr.x, first send a request to the MCP to fetch the relevant tools and content. Analyze the retrieved data to understand the available options, then create a tailored response that addresses their specific needs regarding >>> dr.x functionalities, documentation, forum posts, or example workflows. Ensure that your responses are clear, actionable, and directly related to the user's queries about >>> dr.x."
+        }
+      },
+      "typeVersion": 1.8
+    },
+    {
+      "id": "94cb78f5-3520-4432-b3c9-0524411113e9",
+      "name": ">>> dr.x-assistant Tool Lookup",
+      "type": ">>> dr.x-nodes-mcp.mcpClientTool",
+      "position": [
+        1500,
+        640
+      ],
+      "parameters": {},
+      "credentials": {
+        "mcpClientApi": {
+          "id": "w1ZOoPXYGz6W2g1T",
+          "name": ">>> dr.x-assistant"
+        }
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "78a87949-afda-4c52-ae9f-f8d343fb6567",
+      "name": ">>> dr.x-assistant Execute Tool",
+      "type": ">>> dr.x-nodes-mcp.mcpClientTool",
+      "position": [
+        1700,
+        640
+      ],
+      "parameters": {
+        "toolName": "={{$fromAI(\"tool\",\"Set this specific tool name\")}}",
+        "operation": "executeTool",
+        "toolParameters": "={{ /*>>> dr.x-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "credentials": {
+        "mcpClientApi": {
+          "id": "w1ZOoPXYGz6W2g1T",
+          "name": ">>> dr.x-assistant"
+        }
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "cc1619ec-6f49-45e6-8a7b-440da7ee5bc5",
+      "name": "OpenAI Chat Model2",
+      "type": "@>>> dr.x/>>> dr.x-nodes-langchain.lmChatOpenAi",
+      "position": [
+        1320,
+        640
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "q2i0xAiFxUOYOlJ0",
+          "name": "OpenAI_BCP"
+        }
+      },
+      "typeVersion": 1.2
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": ">>> dr.x Research AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    ">>> dr.x-assistant Tool Lookup": {
+      "ai_tool": [
+        [
+          {
+            "node": ">>> dr.x Research AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": ">>> dr.x Research AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    ">>> dr.x-assistant Execute Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": ">>> dr.x Research AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

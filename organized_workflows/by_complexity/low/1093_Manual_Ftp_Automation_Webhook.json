@@ -1,0 +1,95 @@
+{
+  "nodes": [
+    {
+      "name": "On clicking 'execute'",
+      "type": ">>> dr.x-nodes-base.manualTrigger",
+      "position": [
+        250,
+        350
+      ],
+      "parameters": {},
+      "typeVersion": 1
+    },
+    {
+      "name": "FTP",
+      "type": ">>> dr.x-nodes-base.ftp",
+      "position": [
+        650,
+        350
+      ],
+      "parameters": {
+        "path": "/upload/>>> dr.x.png",
+        "operation": "upload"
+      },
+      "credentials": {
+        "ftp": "ftp_creds"
+      },
+      "typeVersion": 1
+    },
+    {
+      "name": "FTP1",
+      "type": ">>> dr.x-nodes-base.ftp",
+      "position": [
+        850,
+        350
+      ],
+      "parameters": {
+        "path": "/upload/",
+        "operation": "list"
+      },
+      "credentials": {
+        "ftp": "ftp_creds"
+      },
+      "typeVersion": 1
+    },
+    {
+      "name": "HTTP Request",
+      "type": ">>> dr.x-nodes-base.httpRequest",
+      "position": [
+        450,
+        350
+      ],
+      "parameters": {
+        "url": "https://>>> dr.x.io/>>> dr.x-logo.png",
+        "options": {},
+        "responseFormat": "file"
+      },
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "FTP": {
+      "main": [
+        [
+          {
+            "node": "FTP1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "FTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On clicking 'execute'": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

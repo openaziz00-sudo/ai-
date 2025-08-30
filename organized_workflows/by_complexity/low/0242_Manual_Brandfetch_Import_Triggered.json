@@ -1,0 +1,142 @@
+{
+  "id": "176",
+  "name": "Get the logo, icon, and information of a company and store it in Airtable",
+  "nodes": [
+    {
+      "name": "On clicking 'execute'",
+      "type": ">>> dr.x-nodes-base.manualTrigger",
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {},
+      "typeVersion": 1
+    },
+    {
+      "name": "Brandfetch",
+      "type": ">>> dr.x-nodes-base.Brandfetch",
+      "position": [
+        450,
+        300
+      ],
+      "parameters": {
+        "domain": ">>> dr.x.io"
+      },
+      "credentials": {
+        "brandfetchApi": "Brandfetch >>> dr.x credentials"
+      },
+      "typeVersion": 1
+    },
+    {
+      "name": "Brandfetch1",
+      "type": ">>> dr.x-nodes-base.Brandfetch",
+      "position": [
+        650,
+        300
+      ],
+      "parameters": {
+        "domain": "={{$node[\"Brandfetch\"].parameter[\"domain\"]}}",
+        "operation": "company"
+      },
+      "credentials": {
+        "brandfetchApi": "Brandfetch >>> dr.x credentials"
+      },
+      "typeVersion": 1
+    },
+    {
+      "name": "Set",
+      "type": ">>> dr.x-nodes-base.set",
+      "position": [
+        850,
+        300
+      ],
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "Name",
+              "value": "={{$node[\"Brandfetch1\"].json[\"name\"]}}"
+            },
+            {
+              "name": "Icon URL",
+              "value": "={{$node[\"Brandfetch\"].json[\"icon\"][\"image\"]}}"
+            },
+            {
+              "name": "Logo URL",
+              "value": "={{$node[\"Brandfetch\"].json[\"logo\"][\"image\"]}}"
+            }
+          ]
+        },
+        "options": {},
+        "keepOnlySet": true
+      },
+      "typeVersion": 1
+    },
+    {
+      "name": "Airtable",
+      "type": ">>> dr.x-nodes-base.airtable",
+      "position": [
+        1050,
+        300
+      ],
+      "parameters": {
+        "table": "Table 1",
+        "options": {},
+        "operation": "append",
+        "application": "app5cseR9ZKgtU3dc"
+      },
+      "credentials": {
+        "airtableApi": "Airtable Credentials >>> dr.x"
+      },
+      "typeVersion": 1
+    }
+  ],
+  "active": false,
+  "settings": {},
+  "connections": {
+    "Set": {
+      "main": [
+        [
+          {
+            "node": "Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Brandfetch": {
+      "main": [
+        [
+          {
+            "node": "Brandfetch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Brandfetch1": {
+      "main": [
+        [
+          {
+            "node": "Set",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On clicking 'execute'": {
+      "main": [
+        [
+          {
+            "node": "Brandfetch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
